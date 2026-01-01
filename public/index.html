@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weight Tracker</title>
+    <title>2026</title>
     
     <!-- PWA Meta Tags -->
     <meta name="description" content="Track your weight and climbing progress">
     <meta name="theme-color" content="#FFC000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Climb Couch">
+    <meta name="apple-mobile-web-app-title" content="2026">
     
     <!-- Manifest -->
     <link rel="manifest" href="/manifest.json">
@@ -36,10 +36,12 @@
 
     <!-- Auth Container -->
     <div id="authContainer" class="auth-container hidden">
-        <div class="text-center">
-            <canvas id="couchMonkeyCanvas" width="400" height="350" style="max-width: 100%;"></canvas>
-            <h1 class="text-3xl font-bold mb-2">Climb Couch</h1>
-            <p class="mb-6 text-gray-600">Sign in to become a really good climber</p>
+        <canvas id="authRainCanvas"></canvas>
+        <div style="position: absolute; top: 24px; left: 24px; z-index: 10;">
+            <span style="display: inline-block; background: #fdfdf9; padding: 0.25em 0.75em; border-radius: 0.5em; font-size: 2rem; font-weight: bold; color: #111; font-family: system-ui, -apple-system, sans-serif; letter-spacing: 0.05em; box-shadow: 0 2px 8px 0 rgba(0,0,0,0.03);">2026</span>
+        </div>
+        <div class="text-center" style="position: absolute; bottom: 63px; left: 0; right: 0; z-index: 1;">
+            <canvas id="couchMonkeyCanvas" width="400" height="350" style="max-width: 100%; display: none;"></canvas>
             <button onclick="signInWithGoogle()" class="sign-in-button">
                 <svg class="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -55,23 +57,27 @@
     <!-- App Container -->
     <div id="appContainer" class="hidden container">
         <div class="header">
-            <h1 class="text-2xl font-bold">Climb Couch</h1>
+            <h1 class="text-2xl font-bold">2026</h1>
             <div class="flex items-center gap-2">
                 <button onclick="toggleMenu()" class="menu-button">☰</button>
             </div>
         </div>
 
         <div id="menu" class="hidden dropdown-menu">
-            <button onclick="forceUpdate()">Update App</button>
-            <button onclick="openSettings()">Settings</button>
-            <button onclick="handleSignOut()" class="btn-danger">Sign Out</button>
+            <button onclick="forceUpdate()" style="display: none;">Update App</button>
+            <button onclick="openSettings()" style="display: none;">Settings</button>
+            <button onclick="openAbout()">About</button>
+            <button id="addToHomeBtn" onclick="addToHomeScreen()">Add to Home Screen</button>
+            <button onclick="handleSignOut()" class="sign-out-btn">Sign Out</button>
         </div>
 
         <!-- Tabs -->
-        <div class="flex gap-4 mb-6 border-b">
-            <button id="climbingTab" onclick="switchTab('climbing')" class="tab-button active">Climbing</button>
-            <button id="weightTab" onclick="switchTab('weight')" class="tab-button">Weight</button>
-            <button id="chatterTab" onclick="switchTab('chatter')" class="tab-button">Chatter</button>
+        <div id="tabBar" class="mb-6 border-b scrollbar-hide" style="display: flex; gap: 1rem; -webkit-overflow-scrolling: touch;">
+            <button id="climbingTab" onclick="switchTab('climbing')" class="tab-button active" style="flex-shrink: 0; white-space: nowrap;">Climbing</button>
+            <button id="weightTab" onclick="switchTab('weight')" class="tab-button" style="flex-shrink: 0; white-space: nowrap;">Weight</button>
+            <button id="chatterTab" onclick="switchTab('chatter')" class="tab-button" style="flex-shrink: 0; white-space: nowrap;">Chatter</button>
+            <button id="habitsTab" onclick="switchTab('habits')" class="tab-button" style="flex-shrink: 0; white-space: nowrap;">Habits</button>
+            <button id="projectsTab" onclick="switchTab('projects')" class="tab-button" style="flex-shrink: 0; white-space: nowrap;">Projects</button>
         </div>
 
         <!-- Climbing Content -->
@@ -80,7 +86,40 @@
         <!-- Weight Content -->
         <div id="weightContent" class="hidden">
         
-        <!-- Settings Modal -->
+        <!-- Add Entry Form -->
+        <div class="mb-6 flex gap-2">
+            <input type="date" id="date" class="border p-2 rounded">
+            <input type="number" id="weight" step="0.1" placeholder="Weight (kg)" class="border p-2 rounded w-32">
+            <button onclick="addEntry()" class="btn-primary">Add</button>
+        </div>
+
+        <!-- Chart and History Side by Side -->
+        <div class="flex flex-col lg:flex-row gap-4 lg:gap-6" style="height: calc(100vh - 250px); min-height: 400px;">
+            <!-- Chart -->
+            <div class="flex-1 min-w-0" style="position: relative; height: 100%;">
+                <canvas id="chart"></canvas>
+            </div>
+
+            <!-- History List -->
+            <div class="w-full lg:w-80 flex-shrink-0" style="height: 100%;">
+                <h2 class="text-lg font-semibold mb-2">History</h2>
+                <div style="height: calc(100% - 2rem); overflow-y: auto; overflow-x: hidden;">
+                    <ul id="list" class="entry-list"></ul>
+                </div>
+            </div>
+        </div>
+        </div>
+        
+        <!-- Chatter Content -->
+        <div id="chatterContent" class="hidden" style="position: relative; height: calc(100vh - 180px); overflow: hidden;"></div>
+        
+        <!-- Habits Content -->
+        <div id="habitsContent" class="hidden" style="position: relative; height: calc(100vh - 180px); overflow: hidden;"></div>
+        
+        <!-- Projects Content -->
+        <div id="projectsContent" class="hidden" style="position: relative; height: calc(100vh - 180px); overflow: hidden;"></div>
+        
+        <!-- Settings Modal (outside content divs to ensure proper z-index) -->
         <div id="settingsModal" class="hidden modal-overlay">
             <div class="modal-content">
                 <h2 class="text-lg font-bold mb-4">Chart Settings</h2>
@@ -122,36 +161,244 @@
             </div>
         </div>
         
-        <!-- Add Entry Form -->
-        <div class="mb-6 flex gap-2">
-            <input type="date" id="date" class="border p-2 rounded">
-            <input type="number" id="weight" step="0.1" placeholder="Weight (kg)" class="border p-2 rounded w-32">
-            <button onclick="addEntry()" class="btn-primary">Add</button>
-        </div>
-
-        <!-- Chart and History Side by Side -->
-        <div class="flex flex-col lg:flex-row gap-4 lg:gap-6" style="height: calc(100vh - 250px); min-height: 400px;">
-            <!-- Chart -->
-            <div class="flex-1 min-w-0" style="position: relative; height: 100%;">
-                <canvas id="chart"></canvas>
-            </div>
-
-            <!-- History List -->
-            <div class="w-full lg:w-80 flex-shrink-0" style="height: 100%;">
-                <h2 class="text-lg font-semibold mb-2">History</h2>
-                <div style="height: calc(100% - 2rem); overflow-y: auto; overflow-x: hidden;">
-                    <ul id="list" class="entry-list"></ul>
+        <!-- About Modal -->
+        <div id="aboutModal" class="hidden modal-overlay">
+            <div class="modal-content" style="max-width: 400px;">
+                <h2 class="text-lg font-bold mb-4">About</h2>
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span class="text-sm text-gray-600">App Name</span>
+                        <span class="font-medium">2026</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span class="text-sm text-gray-600">Version</span>
+                        <span class="font-medium" id="appVersionAbout">1.0.6</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span class="text-sm text-gray-600">Last Updated</span>
+                        <span class="font-medium">January 2026</span>
+                    </div>
+                    
+                    <div class="py-2">
+                        <p class="text-sm text-gray-600">A personal tracking app for climbing, weight, habits, projects, and mental chatter.</p>
+                    </div>
                 </div>
+                
+                <button onclick="closeAbout()" class="btn-primary w-full mt-4">Close</button>
             </div>
         </div>
-        </div>
-        
-        <!-- Chatter Content -->
-        <div id="chatterContent" class="hidden" style="overflow: hidden;"></div>
     </div>
 
     <script src="js/loading.js"></script>
     <script src="js/pwa.js"></script>
+    <script>
+    // Rain Animation with Umbrella (Auth Screen)
+    (function() {
+        const canvas = document.getElementById('authRainCanvas');
+        if (!canvas) return;
+        
+        let animationId = null;
+        let scene, camera, renderer;
+        
+        function init() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Three.js setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xfdfdf9);
+            
+            camera = new THREE.OrthographicCamera(
+                -width / 2, width / 2,
+                height / 2, -height / 2,
+                0.1, 1000
+            );
+            camera.position.z = 100;
+            
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            renderer.setSize(width, height);
+            
+            // Umbrella settings
+            const umbrellaRadius = 120;
+            const umbrellaY = height * 0.5 - height / 2;
+            const umbrellaX = 0;
+            
+            // Create umbrella canopy using EllipseCurve for a true vector arc
+            const ellipseCurve = new THREE.EllipseCurve(
+                0, 0, // ax, aY (center)
+                umbrellaRadius, umbrellaRadius, // xRadius, yRadius
+                0, Math.PI, // Start angle, end angle (semi-circle, bottom to top)
+                false, // clockwise
+                0 // rotation
+            );
+            const canopyPoints = ellipseCurve.getPoints(256);
+            const umbrellaShape = new THREE.Shape();
+            umbrellaShape.moveTo(canopyPoints[0].x, canopyPoints[0].y);
+            for (let i = 1; i < canopyPoints.length; i++) {
+                umbrellaShape.lineTo(canopyPoints[i].x, canopyPoints[i].y);
+            }
+            umbrellaShape.lineTo(umbrellaRadius, 0); // Close the shape at the base
+            umbrellaShape.lineTo(-umbrellaRadius, 0); // And back to the other base
+            umbrellaShape.closePath();
+
+            const umbrellaGeometry = new THREE.ShapeGeometry(umbrellaShape, 1);
+            const umbrellaMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFC000,
+                side: THREE.DoubleSide
+            });
+            const umbrellaCanopy = new THREE.Mesh(umbrellaGeometry, umbrellaMaterial);
+            umbrellaCanopy.position.set(umbrellaX, umbrellaY, 1);
+            scene.add(umbrellaCanopy);
+
+            // Add umbrella outline using EllipseCurve
+            const outlineGeometry = new THREE.BufferGeometry().setFromPoints(canopyPoints.map(p => new THREE.Vector3(p.x, p.y, 0)));
+            const outlineMaterial = new THREE.LineBasicMaterial({ color: 0xFFC000, linewidth: 2 });
+            const umbrellaOutline = new THREE.Line(outlineGeometry, outlineMaterial);
+            umbrellaOutline.position.set(umbrellaX, umbrellaY, 1.1);
+            scene.add(umbrellaOutline);
+            
+            // Create umbrella handle
+            const handleMaterial = new THREE.MeshBasicMaterial({ color: 0xFFC000 });
+            const handleStraightGeometry = new THREE.PlaneGeometry(7, 105);
+            const handleStraight = new THREE.Mesh(handleStraightGeometry, handleMaterial);
+            handleStraight.position.set(umbrellaX, umbrellaY - 52.5, 1);
+            scene.add(handleStraight);
+            
+            // Curved hook at bottom
+            const hookCurve = new THREE.QuadraticBezierCurve3(
+                new THREE.Vector3(0, -105, 0),
+                new THREE.Vector3(0, -135, 0),
+                new THREE.Vector3(-22, -135, 0)
+            );
+            const hookPoints = hookCurve.getPoints(16);
+            
+            for (let i = 0; i < hookPoints.length - 1; i++) {
+                const p1 = hookPoints[i];
+                const p2 = hookPoints[i + 1];
+                const length = p1.distanceTo(p2);
+                const midX = (p1.x + p2.x) / 2;
+                const midY = (p1.y + p2.y) / 2;
+                const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+                
+                const segGeometry = new THREE.PlaneGeometry(length + 1, 7);
+                const segment = new THREE.Mesh(segGeometry, handleMaterial);
+                segment.position.set(umbrellaX + midX, umbrellaY + midY, 1);
+                segment.rotation.z = angle;
+                scene.add(segment);
+            }
+            
+            // Raindrops
+            const raindrops = [];
+            const raindropGeometry = new THREE.PlaneGeometry(2, 15);
+            const raindropMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x6ba3d6,
+                transparent: true,
+                opacity: 0.6
+            });
+            
+            function hitsUmbrella(x, y) {
+                const dx = x - umbrellaX;
+                const dy = y - umbrellaY;
+                if (dy >= 0 && dy <= umbrellaRadius) {
+                    const distFromCenter = Math.sqrt(dx * dx + dy * dy);
+                    return distFromCenter <= umbrellaRadius;
+                }
+                return false;
+            }
+            
+            function isUnderUmbrella(x) {
+                return Math.abs(x - umbrellaX) < umbrellaRadius;
+            }
+            
+            const raindropCount = Math.floor((width * height) / 1500);
+            for (let i = 0; i < raindropCount; i++) {
+                const raindrop = new THREE.Mesh(raindropGeometry.clone(), raindropMaterial.clone());
+                raindrop.position.x = Math.random() * width - width / 2;
+                raindrop.position.y = Math.random() * height - height / 2 + height;
+                raindrop.velocity = 5 + Math.random() * 7;
+                raindrop.userData.slidingOff = false;
+                raindrop.userData.slideDirection = 0;
+                scene.add(raindrop);
+                raindrops.push(raindrop);
+            }
+            
+            function animate() {
+                animationId = requestAnimationFrame(animate);
+                
+                raindrops.forEach(drop => {
+                    if (drop.userData.slidingOff) {
+                        drop.position.x += drop.userData.slideDirection * 3;
+                        drop.position.y -= drop.velocity * 0.5;
+                        
+                        if (!isUnderUmbrella(drop.position.x)) {
+                            drop.userData.slidingOff = false;
+                        }
+                    } else {
+                        drop.position.y -= drop.velocity;
+                        
+                        if (hitsUmbrella(drop.position.x, drop.position.y)) {
+                            drop.userData.slidingOff = true;
+                            drop.userData.slideDirection = drop.position.x >= umbrellaX ? 1 : -1;
+                        }
+                    }
+                    
+                    if (drop.position.y < -height / 2 - 20) {
+                        drop.position.y = height / 2 + Math.random() * 50;
+                        drop.position.x = Math.random() * width - width / 2;
+                        drop.userData.slidingOff = false;
+                    }
+                });
+                
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+        }
+        
+        function cleanup() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            if (renderer) {
+                renderer.dispose();
+            }
+        }
+        
+        window.addEventListener('resize', () => {
+            const authContainer = document.getElementById('authContainer');
+            if (!authContainer.classList.contains('hidden')) {
+                cleanup();
+                init();
+            }
+        });
+        
+        // Start animation when auth container is visible
+        const observer = new MutationObserver(() => {
+            const authContainer = document.getElementById('authContainer');
+            if (!authContainer.classList.contains('hidden')) {
+                init();
+            } else {
+                cleanup();
+            }
+        });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const authContainer = document.getElementById('authContainer');
+            observer.observe(authContainer, { attributes: true, attributeFilter: ['class'] });
+            
+            if (!authContainer.classList.contains('hidden')) {
+                init();
+            }
+        });
+    })();
+    </script>
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

@@ -181,3 +181,77 @@ export async function saveChatterToFirestore(chatterData) {
         console.error('Error saving chatter to Firestore:', e);
     }
 }
+
+export async function loadProjectsFromFirestore() {
+    if (!db || !currentUser) return { items: [] };
+    try {
+        const docRef = doc(db, 'users', currentUser.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            return {
+                items: data.projectItems || []
+            };
+        }
+    } catch (e) {
+        console.error('Error loading projects from Firestore:', e);
+    }
+    return { items: [] };
+}
+
+export async function saveProjectsToFirestore(projectData) {
+    if (!db || !currentUser) return;
+    try {
+        const docRef = doc(db, 'users', currentUser.uid);
+        const docSnap = await getDoc(docRef);
+        const existingData = docSnap.exists() ? docSnap.data() : {};
+        
+        await setDoc(docRef, {
+            ...existingData,
+            projectItems: projectData.items,
+            lastUpdated: new Date().toISOString()
+        });
+        console.log('Projects data saved to Firestore');
+    } catch (e) {
+        console.error('Error saving projects to Firestore:', e);
+    }
+}
+
+export async function loadHabitsFromFirestore() {
+    if (!db || !currentUser) return { items: [], checkHistory: {} };
+    try {
+        const docRef = doc(db, 'users', currentUser.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            return {
+                items: data.habitItems || [],
+                checkHistory: data.habitCheckHistory || {}
+            };
+        }
+    } catch (e) {
+        console.error('Error loading habits from Firestore:', e);
+    }
+    return { items: [], checkHistory: {} };
+}
+
+export async function saveHabitsToFirestore(habitData) {
+    if (!db || !currentUser) return;
+    try {
+        const docRef = doc(db, 'users', currentUser.uid);
+        const docSnap = await getDoc(docRef);
+        const existingData = docSnap.exists() ? docSnap.data() : {};
+        
+        await setDoc(docRef, {
+            ...existingData,
+            habitItems: habitData.items,
+            habitCheckHistory: habitData.checkHistory,
+            lastUpdated: new Date().toISOString()
+        });
+        console.log('Habits data saved to Firestore');
+    } catch (e) {
+        console.error('Error saving habits to Firestore:', e);
+    }
+}
+
+

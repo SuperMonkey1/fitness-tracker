@@ -3,7 +3,12 @@ const path = require('path');
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="80" fill="#FFC000"/>
-  <text x="256" y="310" font-family="Arial, sans-serif" font-size="200" font-weight="bold" fill="white" text-anchor="middle">CC</text>
+  <!-- Umbrella canopy - simple dome -->
+  <path d="M256 120 C140 120 80 200 80 280 L256 280 L432 280 C432 200 372 120 256 120 Z" fill="white"/>
+  <!-- Umbrella handle - centered pole -->
+  <rect x="246" y="280" width="20" height="110" fill="white"/>
+  <!-- Umbrella hook - curved handle centered with pole -->
+  <path d="M256 390 L256 410 Q256 440 226 440 Q196 440 196 410" stroke="white" stroke-width="20" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
 
 async function generateIcons() {
