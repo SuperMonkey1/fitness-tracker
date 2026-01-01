@@ -53,33 +53,78 @@ export function renderEntryList(settings) {
         });
     }
     
-    // Sort by date descending
-    allItems.sort((a, b) => b.date.localeCompare(a.date));
+    // Add future goal weight entries
+    if (settings.goalStart && settings.goalWeights.length > 0) {
+        const startDate = new Date(settings.goalStart);
+        for (let i = 0; i < settings.goalWeights.length; i++) {
+            const futureDate = new Date(startDate);
+            futureDate.setDate(startDate.getDate() + i);
+            const dateStr = futureDate.toISOString().split('T')[0];
+            
+            // Only add if not already in the list
+            if (!allItems.find(item => item.date === dateStr)) {
+                allItems.push({
+                    date: dateStr,
+                    weight: null,
+                    isGoalOnly: true,
+                    goalWeight: settings.goalWeights[i]
+                });
+            }
+        }
+    }
     
-    list.innerHTML = allItems.map(e => {
-        const greyStyle = e.isInterpolated ? 'color: #9ca3af;' : '';
-        const labelStyle = e.isInterpolated ? 'color: #9ca3af; font-style: italic;' : '';
+    // Sort by date ascending (oldest first)
+    allItems.sort((a, b) => a.date.localeCompare(b.date));
+    
+    // Get today's date string for scrolling
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    list.innerHTML = allItems.map((e, index) => {
+        const greyStyle = e.isInterpolated || e.isGoalOnly ? 'color: #9ca3af;' : '';
+        const labelStyle = e.isInterpolated || e.isGoalOnly ? 'color: #9ca3af; font-style: italic;' : '';
         
         let goalInfo = '';
         if (settings.goalStart && settings.goalWeights.length > 0) {
             const daysSinceStart = Math.floor((new Date(e.date) - new Date(settings.goalStart)) / 86400000);
             if (daysSinceStart >= 0 && daysSinceStart < settings.goalWeights.length) {
                 const goalWeight = settings.goalWeights[daysSinceStart];
-                const diff = e.weight - goalWeight;
-                const diffStr = (diff > 0 ? '+' : '') + diff.toFixed(1);
-                const color = e.isInterpolated ? 'color: #9ca3af' : (diff < 0 ? 'color: #059669' : 'color: #dc2626');
-                goalInfo = `<span class="goal-info" style="${greyStyle}">Goal: ${goalWeight} kg <span style="${color}; font-weight: 600">${diffStr}</span></span>`;
+                
+                if (e.isGoalOnly) {
+                    // For goal-only entries, just show the goal
+                    goalInfo = `<span class="goal-info" style="${greyStyle}">Goal: ${goalWeight} kg</span>`;
+                } else {
+                    // For actual/interpolated entries, show goal and difference
+                    const diff = e.weight - goalWeight;
+                    const diffStr = (diff > 0 ? '+' : '') + diff.toFixed(1);
+                    const color = e.isInterpolated ? 'color: #9ca3af' : (diff < 0 ? 'color: #059669' : 'color: #dc2626');
+                    goalInfo = `<span class="goal-info" style="${greyStyle}">Goal: ${goalWeight} kg <span style="${color}; font-weight: 600">${diffStr}</span></span>`;
+                }
             }
         }
         
-        const deleteBtn = e.isInterpolated ? '' : `<button onclick="window.deleteEntry('${e.date}')" class="btn-danger" style="font-size: 0.875rem">×</button>`;
+        const deleteBtn = e.isInterpolated || e.isGoalOnly ? '' : `<button onclick="window.deleteEntry('${e.date}')" class="btn-danger" style="font-size: 0.875rem">×</button>`;
         
-        return `<li class="entry-item">
+        const weightDisplay = e.isGoalOnly ? '' : `<strong>${e.weight} kg</strong>${e.isInterpolated ? ' (est.)' : ''}`;
+        const separator = e.isGoalOnly ? '' : ': ';
+        
+        // Add id to today's entry for scrolling
+        const idAttr = e.date === todayStr ? ` id="today-entry"` : '';
+        
+        return `<li class="entry-item"${idAttr}>
             <div style="display: flex; flex-direction: column">
-                <span style="${labelStyle}">${e.date}: <strong>${e.weight} kg</strong>${e.isInterpolated ? ' (est.)' : ''}</span>
+                <span style="${labelStyle}">${e.date}${separator}${weightDisplay}</span>
                 ${goalInfo}
             </div>
             ${deleteBtn}
         </li>`;
     }).join('');
+    
+    // Auto scroll to today's entry
+    setTimeout(() => {
+        const todayEntry = document.getElementById('today-entry');
+        if (todayEntry) {
+            todayEntry.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 100);
 }
